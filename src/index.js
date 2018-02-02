@@ -9,8 +9,13 @@ let botmatic = {};
  *
  * @param {Regexp} String regexp that represent the action to execute.
  */
-botmatic.listenAction = (action, func) => {
-  server.action[action] = func;
+botmatic.onAction = (action, func) => {
+  try {
+    new RegExp(`^${action}$`);
+    server.action[action] = func;
+  } catch(e) {
+    console.error(`${action} is not a valid regexp`)
+  }
 }
 
 /**
@@ -18,8 +23,13 @@ botmatic.listenAction = (action, func) => {
  *
  * @param {Regexp} String regexp that represent the event to listen.
  */
-botmatic.listenEvent = (event, func) => {
-  server.event[event] = func;
+botmatic.onEvent = (event, func) => {
+  try {
+    new RegExp(`^${event}$`);
+    server.event[event] = func;
+  } catch(e) {
+    console.error(`${event} is not a valid regexp`)
+  }
 }
 
 module.exports = botmatic;

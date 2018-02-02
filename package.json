@@ -1,6 +1,6 @@
 {
   "name": "botmatic-integration",
-  "version": "0.0.1",
+  "version": "0.1.1",
   "description": "Botmatic integration sdk.",
   "author": "Kévin",
   "license": "MIT",
@@ -18,7 +18,7 @@
     "node": ">=6.5.0"
   },
   "repository": {
-    "url": "https://glitch.com/edit/#!/welcome-project"
+    "url": "https://github.com/kevin-botmatic/botmatic-integration.git"
   },
   "keywords": [
     "node",

@@ -30,7 +30,7 @@ const botmatic = require('botmatic-integration')
 /**
  *
  */
-botmatic.listenAction("my_action", function(data) {
+botmatic.onAction("my_action", function(data) {
   return new Promise((resolve, reject) => {
     resolve({data: {test: "data to return"}, type: "data"});
   })
@@ -41,7 +41,7 @@ botmatic.listenAction("my_action", function(data) {
 ```javascript
 const botmatic = require('botmatic-integration')
 
-botmatic.listenEvent("contact_created", function(data) {
+botmatic.onEvent("contact_created", function(data) {
   return new Promise((resolve, reject) => {
     resolve({data: {test: "ok"}, type: "data"});
   })
