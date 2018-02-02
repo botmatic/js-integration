@@ -1,0 +1,27 @@
+{
+  "name": "botmatic-integration",
+  "version": "0.0.1",
+  "description": "Botmatic integration sdk.",
+  "author": "Kévin",
+  "license": "MIT",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "main": "src/index.js",
+  "dependencies": {
+    "express": "^4.16.2",
+    "request": "^2.83.0",
+    "dotenv": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=6.5.0"
+  },
+  "repository": {
+    "url": "https://glitch.com/edit/#!/welcome-project"
+  },
+  "keywords": [
+    "node",
+    "botmatic"
+  ]
+}
