@@ -14,7 +14,7 @@ botmatic.onAction = (action, func) => {
     new RegExp(`^${action}$`);
     server.action[action] = func;
   } catch(e) {
-    console.error(`${action} is not a valid regexp`)
+    console.error(`Action "${action}" is not a valid regexp`)
   }
 }
 
@@ -28,7 +28,7 @@ botmatic.onEvent = (event, func) => {
     new RegExp(`^${event}$`);
     server.event[event] = func;
   } catch(e) {
-    console.error(`${event} is not a valid regexp`)
+    console.error(`Event "${event}"is not a valid regexp`)
   }
 }
 

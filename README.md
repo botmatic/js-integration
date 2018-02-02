@@ -27,9 +27,6 @@ Here you can define your action with:
 ```javascript
 const botmatic = require('botmatic-integration')
 
-/**
- *
- */
 botmatic.onAction("my_action", function(data) {
   return new Promise((resolve, reject) => {
     resolve({data: {test: "data to return"}, type: "data"});
