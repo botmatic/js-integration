@@ -1,6 +1,6 @@
 # Create your Botmatic integration
 
-[Botmatic.ai](https:botmatic.ai) is a keyboard first experience where you design your chatbot by writing a conversation.
+[Botmatic.ai](https://botmatic.ai) is a keyboard first experience where you design your chatbot by writing a conversation.
 You can create your own integration to listen Botmatic events and actions.
 
 ## Install
