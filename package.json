@@ -1,5 +1,5 @@
 {
-  "name": "botmatic-js-integration",
+  "name": "botmatic.js-integration",
   "version": "0.2.0",
   "description": "Botmatic integration sdk.",
   "author": "Botmatic",
@@ -18,7 +18,7 @@
     "node": ">=6.5.0"
   },
   "repository": {
-    "url": "https://github.com/botmatic/botmatic-js-integration.git"
+    "url": "https://github.com/botmatic/botmatic.js-integration.git"
   },
   "keywords": [
     "node",
