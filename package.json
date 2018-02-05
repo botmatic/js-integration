@@ -2,7 +2,7 @@
   "name": "botmatic.js-integration",
   "version": "0.2.0",
   "description": "Botmatic integration sdk.",
-  "author": "Kévin",
+  "author": "Botmatic",
   "license": "MIT",
   "main": "src/index.js",
   "scripts": {
