@@ -6,7 +6,7 @@ You can create your own integration to listen Botmatic events and actions.
 ## Install
 
 ```shell
-npm install --save botmatic-integration
+npm install --save botmatic.js-integration
 ```
 
 ## Create a .env file
