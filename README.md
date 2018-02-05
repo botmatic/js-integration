@@ -25,8 +25,9 @@ On Botmatic chatbot editor, you can call custom action.
 Here you can define your action with:
 
 ```javascript
-const botmatic = require('botmatic-integration')
+const botmatic = require('@botmatic/js-integration')
 
+// You can use regexp for action name.
 botmatic.onAction("my_action", function(data) {
   return new Promise((resolve, reject) => {
     resolve({data: {test: "data to return"}, type: "data"});
@@ -36,8 +37,9 @@ botmatic.onAction("my_action", function(data) {
 
 ### Listen event
 ```javascript
-const botmatic = require('botmatic-integration')
+const botmatic = require('@botmatic/js-integration')
 
+// You can use regexp for event name.
 botmatic.onEvent("contact_created", function(data) {
   return new Promise((resolve, reject) => {
     resolve({data: {test: "ok"}, type: "data"});
