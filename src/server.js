@@ -46,7 +46,7 @@ const execute = (req, res, type) => {
   }
 
   if (elementFound) {
-    elementFound(req.body.data)
+    elementFound(req.body)
     .then((result) => {
       result.success = true;
       send_response(res, result)
