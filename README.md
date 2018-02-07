@@ -19,13 +19,30 @@ BOTMATIC_PORT=<your_express_server_port>
 
 ## Usage
 
+### Require botmatic
+You have to require Botmatic integration, that's a function taking optional parameters with a json object:
+
+```javascript
+const botmatic = require('@botmatic/js-integration')({
+  port: 3456,
+  server: existing_express_server,
+  token: "azertyuiopqsdfghjklmwxcvbn"
+})
+```
+
+| parameter | description            |
+| ----------- | --------------- |
+| port        | (optionnal) Server express port          |
+| server      | (optionnal) Existing express server |
+| token      | (optionnal) Botmatic integration token. If not set, the integration will accept all request. |
+
 ### Execute action
 
 On Botmatic chatbot editor, you can call custom action.
 Here you can define your action with:
 
 ```javascript
-const botmatic = require('@botmatic/js-integration')
+const botmatic = require('@botmatic/js-integration')()
 
 // You can use regexp for action name.
 botmatic.onAction("my_action", function(data) {
@@ -37,12 +54,12 @@ botmatic.onAction("my_action", function(data) {
 
 ### Listen event
 ```javascript
-const botmatic = require('@botmatic/js-integration')
+const botmatic = require('@botmatic/js-integration')()
 
 // You can use regexp for event name.
-botmatic.onEvent("contact_created", function(data) {
+botmatic.onEvent(botmatic.events.CONTACT_UPDATED, function(data) {
   return new Promise((resolve, reject) => {
-    resolve({data: {test: "ok"}, type: "data"});
+    resolve({data: "ok", type: "data"});
   })
 })
 ```
