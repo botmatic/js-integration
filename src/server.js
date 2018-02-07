@@ -31,7 +31,7 @@ const execute = (botmatic, res, type) => {
     let template_res = {
       success: false,
       type: "data",
-      data: {error: `No ${type} "${req.body.action}" defined`};
+      data: {error: `No ${type} "${req.body[type]}" defined`}
     };
 
     send_response(res, template_res);
@@ -43,7 +43,7 @@ const execute_event = (botmatic, req, res) => {
 }
 
 const execute_action = (botmatic, req, res) => {
-  execute(botmatic, res, "action")
+  execute(botmatic, req, res, "action")
 }
 
 const send_response = (res, response) => {
@@ -72,6 +72,8 @@ const setup_routes = (botmatic, path = '/', token = '') => {
         execute_action(botmatic, req, res)
       } else if (req.body.event) {
         execute_event(botmatic, req, res)
+      } else {
+        res.status(403).send("Bad Request")
       }
     } else {
       console.log(`Forbidden: "${req.headers.authorization}" != "${bearer}"`)
