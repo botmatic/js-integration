@@ -1,5 +1,9 @@
 // Don't forget to put your BOTMATIC_TOKEN in .env file.
-
+const BOTMATIC_EVENTS = {
+  CONTACT_UPDATED: "contact_updated",
+  CONTACT_CREATED: "contact_created",
+  CONTACT_DELETED: "contact_deleted"
+}
 
 /**
  * Add a Botmatic function to execute.
@@ -45,7 +49,8 @@ const init = (params = {}) => {
     onEvent: onEvent(server),
     onInstall: onInstall(server),
     onUninstall: onUninstall(server),
-    app: server.app
+    app: server.app,
+    events: Object.freeze(BOTMATIC_EVENTS)
   }
 
   return botmatic
