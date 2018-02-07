@@ -21,16 +21,10 @@ const botmatic = require('@botmatic/js-integration')(params)
 params is a JSON object with fields:
 
 | Field name | Type | Description            |
-| ----------- | --------------- |
+| ----------- | --------------- | ----------- |
 | port        | Integer |(optionnal) Server express port (3000 by default)          |
 | server      | express server|(optionnal) Existing express server |
 | token      | String | (optionnal) Botmatic integration token. If not set, the integration will accept all requests. |
-
-| Field name | Description |
-| ------ | ----------- |
-| data   | path to data files to supply the data that will be passed into templates. |
-| engine | engine to be used for processing templates. Handlebars is the default. |
-| ext    | extension to be used for dest files. |
 
 ### Execute action
 
