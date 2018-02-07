@@ -26,7 +26,7 @@ const botmatic = require('@botmatic/js-integration')({
 | ----------- | --------------- |
 | port        | (optionnal) Server express port          |
 | server      | (optionnal) Existing express server |
-| token      | (optionnal) Botmatic integration token. If not set, the integration will accept all request. |
+| token      | (optionnal) Botmatic integration token. If not set, the integration will accept all requests. |
 
 ### Execute action
 
