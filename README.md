@@ -12,21 +12,19 @@ npm install --save @botmatic/js-integration
 ## Usage
 
 ### Require botmatic
-You have to require Botmatic integration, that's a function taking optional parameters with a json object:
+You have to require Botmatic integration. It's a function taking an optional parameter:
 
 ```javascript
-const botmatic = require('@botmatic/js-integration')({
-  port: 3456,
-  server: existing_express_server,
-  token: "azertyuiopqsdfghjklmwxcvbn"
-})
+const botmatic = require('@botmatic/js-integration')(params)
 ```
 
-| parameter | description            |
+params is a JSON object with fields:
+
+| Field name | Type | Description            |
 | ----------- | --------------- |
-| port        | (optionnal) Server express port          |
-| server      | (optionnal) Existing express server |
-| token      | (optionnal) Botmatic integration token. If not set, the integration will accept all requests. |
+| port        | Integer |(optionnal) Server express port          |
+| server      | express server|(optionnal) Existing express server |
+| token      | String | (optionnal) Botmatic integration token. If not set, the integration will accept all requests. |
 
 ### Execute action
 
