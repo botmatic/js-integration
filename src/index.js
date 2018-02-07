@@ -1,15 +1,12 @@
 // Don't forget to put your BOTMATIC_TOKEN in .env file.
 
-const server = require('./server')
-
-let botmatic = {};
 
 /**
  * Add a Botmatic function to execute.
  *
  * @param {Regexp} String regexp that represent the action to execute.
  */
-botmatic.onAction = (action, func) => {
+const onAction = (server) => (action, func) => {
   try {
     new RegExp(`^${action}$`);
     server.action[action] = func;
@@ -23,7 +20,7 @@ botmatic.onAction = (action, func) => {
  *
  * @param {Regexp} String regexp that represent the event to listen.
  */
-botmatic.onEvent = (event, func) => {
+ const onEvent = (server) => (event, func) => {
   try {
     new RegExp(`^${event}$`);
     server.event[event] = func;
@@ -32,4 +29,18 @@ botmatic.onEvent = (event, func) => {
   }
 }
 
-module.exports = botmatic;
+const init = (params = {}) => {
+  server = require('./server')(params)
+
+  botmatic = {
+    onAction: onAction(server),
+    onEvent: onEvent(server),
+    app: server.app
+  }
+
+  return botmatic
+}
+
+// module.exports = botmatic;
+
+module.exports = init

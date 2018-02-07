@@ -1,47 +1,19 @@
-const express = require('express')
 const request = require('request')
-const app = express()
-const bodyParser = require('body-parser');
+
 require('dotenv').config();
 
-const server = {
-  action: [],
-  event: []
-}
-const actions = [];
+const bearer = (token) => `Bearer ${token}`.trim();
 
-app.use(bodyParser.json());
 
-app.get('/', (req, res) => {
-  res.send("Hello world!");
-});
-
-const bearer = `Bearer ${process.env.BOTMATIC_TOKEN}`.trim();
-
-app.post('/', (req, res) => {
-  if ( req.headers.authorization == bearer || !process.env.BOTMATIC_TOKEN) {
-    console.log(`Receive "${JSON.stringify(req.body)}"`)
-
-    if (req.body.action) {
-      execute_action(req, res)
-    } else if (req.body.event) {
-      execute_event(req, res)
-    }
-  } else {
-    console.log(`Forbidden: "${req.headers.authorization}" != "${bearer}"`)
-    res.status(401).send("Not authorized")
-  }
-});
-
-const execute = (req, res, type) => {
+const execute = (botmatic, res, type) => {
   let elementFound = null;
   var regex;
 
-  for ( var elm in server[type] ) {
+  for ( var elm in botmatic[type] ) {
     regex = new RegExp(`^${elm}$`);
 
     if (regex.test(req.body[type])) {
-      elementFound = server[type][elm];
+      elementFound = botmatic[type][elm];
     }
   }
 
@@ -58,19 +30,20 @@ const execute = (req, res, type) => {
   } else {
     let template_res = {
       success: false,
-      type: "data"
+      type: "data",
+      data: {error: `No ${type} "${req.body.action}" defined`};
     };
-    template_res.data = {error: `No ${type} "${req.body.action}" defined`};
+
     send_response(res, template_res);
   }
 }
 
-const execute_event = (req, res) => {
-  execute(req, res, "event")
+const execute_event = (botmatic, req, res) => {
+  execute(botmatic, req, res, "event")
 }
 
-const execute_action = (req, res) => {
-  execute(req, res, "action")
+const execute_action = (botmatic, req, res) => {
+  execute(botmatic, res, "action")
 }
 
 const send_response = (res, response) => {
@@ -79,9 +52,49 @@ const send_response = (res, response) => {
   res.send(response);
 }
 
-const port = process.env.BOTMATIC_PORT || 3000;
+const setup_express = (port = 3000) => {
+  const app = require('express')()
+  const bodyParser = require('body-parser');
 
-// Start express listening.
-app.listen(port, () => console.log(`Example app listening on port ${port}!`))
+  app.use(bodyParser.json());
 
-module.exports = server;
+  app.listen(port, () => console.log(`Example app listening on port ${port}!`))
+
+  return app
+}
+
+const setup_routes = (botmatic, path = '/', token = '') => {
+  botmatic.app.post(path, (req, res) => {
+    if (req.headers.authorization == bearer(token) || token == '') {
+      console.log(`Receive "${JSON.stringify(req.body)}"`)
+
+      if (req.body.action) {
+        execute_action(botmatic, req, res)
+      } else if (req.body.event) {
+        execute_event(botmatic, req, res)
+      }
+    } else {
+      console.log(`Forbidden: "${req.headers.authorization}" != "${bearer}"`)
+      res.status(401).send("Not authorized")
+    }
+  });
+}
+
+
+const init = ({path, app, token, port}) => {
+  if (!app) {
+    app = setup_express(port)
+  }
+
+  const botmatic = {
+    action: [],
+    event: [],
+    app: app
+  }
+
+  setup_routes(botmatic, path, token)
+
+  return botmatic
+}
+
+module.exports = init;
