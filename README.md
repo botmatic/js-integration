@@ -54,4 +54,11 @@ botmatic.onEvent(botmatic.events.CONTACT_UPDATED, function(data) {
 })
 ```
 
+### Debug
+
+To have debug traces, you can start your application with debug variable:
+```bash
+DEBUG=botmatic* node index.js
+```
+
 More information about Botmatic integration [here](https://botmatic.zendesk.com/hc/en-us/articles/115004171313-Get-started-with-custom-integrations)
