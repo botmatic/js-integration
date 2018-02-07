@@ -2,7 +2,7 @@
  * @constant
  * @type BotmaticEvents
  */
-const BOTMATIC_EVENTS = Object.freez({
+const BOTMATIC_EVENTS = Object.freeze({
   CONTACT_UPDATED: "contact_updated",
   CONTACT_CREATED: "contact_created",
   CONTACT_DELETED: "contact_deleted",
