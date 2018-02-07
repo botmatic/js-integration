@@ -4,7 +4,6 @@ require('dotenv').config();
 
 const bearer = (token) => `Bearer ${token}`.trim();
 
-
 const execute = (botmatic, req, res, type) => {
   let elementFound = null;
   var regex;
