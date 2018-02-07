@@ -9,14 +9,6 @@ You can create your own integration to listen Botmatic events and actions.
 npm install --save @botmatic/js-integration
 ```
 
-## Create a .env file
-
-Create a file named .env to put environment variables with:
-```
-BOTMATIC_TOKEN=<your_botmatic_integration_token>
-BOTMATIC_PORT=<your_express_server_port>
-```
-
 ## Usage
 
 ### Require botmatic
