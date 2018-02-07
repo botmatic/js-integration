@@ -1,6 +1,6 @@
 {
   "name": "@botmatic/js-integration",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Botmatic integration sdk.",
   "author": "Botmatic",
   "license": "MIT",
@@ -8,11 +8,11 @@
   "scripts": {
     "start": "node src/index.js"
   },
-  "main": "src/index.js",
   "dependencies": {
+    "debug": "^3.1.0",
+    "dotenv": "^4.0.0",
     "express": "^4.16.2",
-    "request": "^2.83.0",
-    "dotenv": "^4.0.0"
+    "request": "^2.83.0"
   },
   "engines": {
     "node": ">=6.5.0"

@@ -1,3 +1,5 @@
+const debug = require('debug')('botmatic')
+
 /**
  * @constant
  * @type BotmaticEvents
@@ -20,6 +22,7 @@ const makeOnAction = (server) => (action, func) => {
   try {
     new RegExp(`^${action}$`);
     server.action[action] = func;
+    debug(`listening "${action}" action`)
   } catch(e) {
     console.error(`Action "${action}" is not a valid regexp`)
   }
@@ -35,8 +38,9 @@ const makeOnAction = (server) => (action, func) => {
   try {
     new RegExp(`^${event}$`);
     server.event[event] = func;
+    debug(`listening "${event}" event`)
   } catch(e) {
-    console.error(`Event "${event}"is not a valid regexp`)
+    console.error(`Event "${event}" is not a valid regexp`)
   }
 }
 
@@ -48,6 +52,7 @@ const makeOnAction = (server) => (action, func) => {
  */
 const makeOnInstall = (server) => (func) => {
   server.event["install"] = func;
+  debug(`listening "install" event`)
 }
 
 /**
@@ -58,6 +63,7 @@ const makeOnInstall = (server) => (func) => {
  */
 const makeOnUninstall = (server) => (func) => {
   server.event["uninstall"] = func;
+  debug(`listening "uninstall" event`)
 }
 
 /**
