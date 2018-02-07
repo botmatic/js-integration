@@ -29,12 +29,22 @@ const onAction = (server) => (action, func) => {
   }
 }
 
+const onInstall = (server) => (func) => {
+  server.event["install"] = func;
+}
+
+const onUninstall = (server) => (func) => {
+  server.event["uninstall"] = func;
+}
+
 const init = (params = {}) => {
   server = require('./server')(params)
 
   botmatic = {
     onAction: onAction(server),
     onEvent: onEvent(server),
+    onInstall: onInstall(server),
+    onUninstall: onUninstall(server),
     app: server.app
   }
 
