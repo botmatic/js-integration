@@ -82,15 +82,15 @@ const setup_routes = (botmatic, path = '/', token = '') => {
 }
 
 
-const init = ({path, app, token, port}) => {
-  if (!app) {
-    app = setup_express(port)
+const init = ({path, server, token, port}) => {
+  if (!server) {
+    server = setup_express(port)
   }
 
   const botmatic = {
     action: [],
     event: [],
-    app: app
+    app: server
   }
 
   setup_routes(botmatic, path, token)
