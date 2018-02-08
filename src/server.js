@@ -59,9 +59,6 @@ const setup_express = (port = 3000) => {
   debug(`starting express server on port ${port}`)
 
   const app = require('express')()
-  const bodyParser = require('body-parser');
-
-  app.use(bodyParser.json());
 
   app.listen(port, () => debug(`express app listening on port ${port}`))
 
@@ -71,7 +68,10 @@ const setup_express = (port = 3000) => {
 const setup_routes = (botmatic, path = '/', token = '') => {
   debug(`setup route on "${path}"`)
 
-  botmatic.app.post(path, (req, res) => {
+  const bodyParser = require('body-parser');
+  const jsonParser = bodyParser.json();
+
+  botmatic.app.post(path, jsonParser, (req, res) => {
     if (req.headers.authorization == bearer(token) || token == '') {
       debug(`receive "${JSON.stringify(req.body)}"`)
 
@@ -86,7 +86,7 @@ const setup_routes = (botmatic, path = '/', token = '') => {
         }
       } else {
         debug(`no parameter sent in query`)
-        res.status(400).send("Bad request")
+        res.status(400).send("Bad request. No parameter received")
       }
     } else {
       debug(`forbidden: "${req.headers.authorization}" != "${bearer}"`)
@@ -94,7 +94,6 @@ const setup_routes = (botmatic, path = '/', token = '') => {
     }
   });
 }
-
 
 const init = ({path, server, token, port}) => {
   if (!server) {

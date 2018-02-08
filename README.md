@@ -11,42 +11,61 @@ npm install --save @botmatic/js-integration
 
 ## Usage
 
-### Require botmatic
-You have to require Botmatic integration. It's a function taking an optional parameter:
+### Require Botmatic
 
 ```javascript
-const botmatic = require('@botmatic/js-integration')(params)
+const botmatic = require('@botmatic/js-integration')(settings)
 ```
 
-params is a JSON object with fields:
+settings is an optional JSON object with the following fields:
 
 | Field name | Type | Description            |
 | ----------- | --------------- | ----------- |
-| port        | Integer |(optional) Server express port (3000 by default) |
-| path        | String | (optional) Path events will be sent to ("/" by default |
-| server      | express server|(optional) Existing express server |
-| token      | String | (optional) Botmatic integration token. If not set, the integration will accept all requests. |
+| port        | Integer |optional - Server Express port (3000 by default) |
+| path        | String | optional - Endpoint path where Botmatic will send data with a POST request ("/" by default) |
+| server      | Express server|optional - Your existing Express server |
+| token      | String | optional - Botmatic integration token. If not set, the integration will accept all requests. |
 
-### Execute actions
+This library has an Express server embedded. It's optional and you can use your own if you want.
 
-In the Botmatic chatbot editor, you can call custom actions.
-Here you can define your action's behaviour with:
+#### Example with your existing Express server (works with Express 4)
+```javascript
+var express = require('express');
+var app = express();
+
+const botmatic = require('@botmatic/js-integration')({
+  server: app
+})
+```
+
+#### Example using the Express server included with @botmatic/js-integration
+```javascript
+const botmatic = require('@botmatic/js-integration')()
+```
+
+### Listening to actions
+
+In the Botmatic chatbot builder, you can call custom actions during the conversation.
+
+Useful to fetch data from an external source.
+
+Must return a promise.
 
 ```javascript
 const botmatic = require('@botmatic/js-integration')()
- 
-// You can use regexp for action name.
-botmatic.onAction("my_action", function(data) {
+
+// Tips: you can use regexp for action name.
+botmatic.onAction("actionName", function(data) {
   return new Promise((resolve, reject) => {
-    resolve({data: {test: "data to return"}, type: "data"});
+    resolve({data: {key: "value"}, type: "data"});
   })
 })
 ```
 
-### Listen to events
+### Listening to events
 ```javascript
 const botmatic = require('@botmatic/js-integration')()
- 
+
 // You can use regexp for event name, or the constants in botmatic.events
 botmatic.onEvent(botmatic.events.CONTACT_UPDATED, function(data) {
   return new Promise((resolve, reject) => {
@@ -55,11 +74,21 @@ botmatic.onEvent(botmatic.events.CONTACT_UPDATED, function(data) {
 })
 ```
 
+Events list:
+
+| Event name | Description |
+| ----------- | --------------- |
+| CONTACT_CREATED | A contact is created on Botmatic |
+| CONTACT_UPDATED | A contact is updated on Botmatic |
+| CONTACT_DELETED | A contact is deleted on Botmatic |
+| USER_REPLY | A user has just spoke on Botmatic |
+| BOT_REPLY | A bot has just replied to a user on Botmatic|
+
 ### Debug
 
-To have debug traces, you can start your application with debug variable:
+Enable debug traces by starting your application with:
 ```bash
 DEBUG=botmatic* node index.js
 ```
 
-More information about Botmatic integration [here](https://botmatic.zendesk.com/hc/en-us/articles/115004171313-Get-started-with-custom-integrations)
+More information about Botmatic.ai integrations [here](https://botmatic.zendesk.com/hc/en-us/articles/115004171313-Get-started-with-custom-integrations)
