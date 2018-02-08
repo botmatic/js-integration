@@ -22,18 +22,19 @@ params is a JSON object with fields:
 
 | Field name | Type | Description            |
 | ----------- | --------------- | ----------- |
-| port        | Integer |(optionnal) Server express port (3000 by default)          |
-| server      | express server|(optionnal) Existing express server |
-| token      | String | (optionnal) Botmatic integration token. If not set, the integration will accept all requests. |
+| port        | Integer |(optional) Server express port (3000 by default) |
+| path        | String | (optional) Path events will be sent to ("/" by default |
+| server      | express server|(optional) Existing express server |
+| token      | String | (optional) Botmatic integration token. If not set, the integration will accept all requests. |
 
-### Execute action
+### Execute actions
 
-On Botmatic chatbot editor, you can call custom action.
-Here you can define your action with:
+In the Botmatic chatbot editor, you can call custom actions.
+Here you can define your action's behaviour with:
 
 ```javascript
 const botmatic = require('@botmatic/js-integration')()
-
+ 
 // You can use regexp for action name.
 botmatic.onAction("my_action", function(data) {
   return new Promise((resolve, reject) => {
@@ -42,11 +43,11 @@ botmatic.onAction("my_action", function(data) {
 })
 ```
 
-### Listen event
+### Listen to events
 ```javascript
 const botmatic = require('@botmatic/js-integration')()
-
-// You can use regexp for event name.
+ 
+// You can use regexp for event name, or the constants in botmatic.events
 botmatic.onEvent(botmatic.events.CONTACT_UPDATED, function(data) {
   return new Promise((resolve, reject) => {
     resolve({data: "ok", type: "data"});
