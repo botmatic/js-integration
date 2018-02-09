@@ -5,7 +5,17 @@ require('dotenv').config();
 
 const bearer = (token) => `Bearer ${token}`.trim();
 
-const execute = (botmatic, req, res, type) => {
+const authenticate = (token) => (authorization) => {
+  return new Promise((resolve, reject) => {
+    if (token == '' || authorization == bearer(token)) {
+      resolve(token)
+    } else {
+      reject('Bad token')
+    }
+  })
+}
+
+const execute = (botmatic, client, req, res, type) => {
   debug(`Executing ${type}...`)
 
   let elementFound = null;
@@ -20,7 +30,7 @@ const execute = (botmatic, req, res, type) => {
   }
 
   if (elementFound) {
-    elementFound(req.body)
+    elementFound({data: req.body, client})
     .then((result) => {
       result.success = true;
       send_response(res, result)
@@ -42,12 +52,12 @@ const execute = (botmatic, req, res, type) => {
   }
 }
 
-const execute_event = (botmatic, req, res) => {
-  execute(botmatic, req, res, "event")
+const execute_event = (botmatic, auth_user, req, res) => {
+  execute(botmatic, auth_user, req, res, "event")
 }
 
-const execute_action = (botmatic, req, res) => {
-  execute(botmatic, req, res, "action")
+const execute_action = (botmatic, auth_user, req, res) => {
+  execute(botmatic, auth_user, req, res, "action")
 }
 
 const send_response = (res, response) => {
@@ -65,21 +75,20 @@ const setup_express = (port = 3000) => {
   return app
 }
 
-const setup_routes = (botmatic, path = '/', token = '') => {
+const setup_routes = (botmatic, bearer, path = '/', token = '') => {
   debug(`setup route on "${path}"`)
 
   const bodyParser = require('body-parser');
   const jsonParser = bodyParser.json();
 
   botmatic.app.post(path, jsonParser, (req, res) => {
-    if (req.headers.authorization == bearer(token) || token == '') {
-      debug(`receive "${JSON.stringify(req.body)}"`)
-
+    botmatic.authenticate_request(req.headers.authorization)
+    .then((client) => {
       if (req.body) {
         if (req.body.action) {
-          execute_action(botmatic, req, res)
+          execute_action(botmatic, client, req, res)
         } else if (req.body.event) {
-          execute_event(botmatic, req, res)
+          execute_event(botmatic, client, req, res)
         } else {
           debug("not receive an action or an event. Ignore")
           res.status(403).send("Bad Request")
@@ -88,27 +97,39 @@ const setup_routes = (botmatic, path = '/', token = '') => {
         debug(`no parameter sent in query`)
         res.status(400).send("Bad request. No parameter received")
       }
-    } else {
-      debug(`forbidden: "${req.headers.authorization}" != "${bearer}"`)
+    })
+    .catch((error) => {
+      debug(`forbidden: bad auth`)
       res.status(401).send("Not authorized")
-    }
+    })
   });
 }
 
-const init = ({path, server, token, port}) => {
+const init = ({path, server, token, port, auth}) => {
   if (!server) {
     server = setup_express(port)
   } else {
     debug("use existing express server")
   }
 
+  if (!auth) {
+    auth = authenticate(token)
+  }
+
+  if (!bearer) {
+    bearer = basic_bearer
+  } else {
+    debug("use custom bearer function")
+  }
+
   const botmatic = {
     action: [],
     event: [],
-    app: server
+    app: server,
+    authenticate_request: auth
   }
 
-  setup_routes(botmatic, path, token)
+  setup_routes(botmatic, bearer, path)
 
   return botmatic
 }

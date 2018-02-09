@@ -1,7 +1,7 @@
 # Create your Botmatic integration
 
 [Botmatic.ai](https://botmatic.ai) is a keyboard first experience where you design your chatbot by writing a conversation.
-You can create your own integration to listen Botmatic events and actions.
+You can create your own integrations and listen to Botmatic events and actions.
 
 ## Install
 
@@ -25,6 +25,7 @@ settings is an optional JSON object with the following fields:
 | path        | String | optional - Endpoint path where Botmatic will send data with a POST request ("/" by default) |
 | server      | Express server|optional - Your existing Express server |
 | token      | String | optional - Botmatic integration token. If not set, the integration will accept all requests. |
+| auth        | Function | optionnal - Function to authenticate Botmatic integration client. Take a parameter token (given in header), must return a promise |
 
 This library has an Express server embedded. It's optional and you can use your own if you want.
 
@@ -43,19 +44,39 @@ const botmatic = require('@botmatic/js-integration')({
 const botmatic = require('@botmatic/js-integration')()
 ```
 
+### Example using custom authentication
+```javascript
+const botmatic = require('@botmatic/js-integration')({
+  auth: (token) => {
+    return new Promise((resolve, reject) => {
+      // Retrieve the client in your database, or other.
+      const client_authenticated = {id: "client_id"}
+      // If the client is known
+      // resolve(client_authenticated)
+      // if not
+      // reject();
+    })
+  }
+})
+```
+
 ### Listening to actions
 
 In the Botmatic chatbot builder, you can call custom actions during the conversation.
 
 Useful to fetch data from an external source.
 
-Must return a promise.
+**Parameters**:
+- action name: Regexp you can pass exact action name, or a regexp (e.g: ".\*")
+- callback: Function that takes 2 arguments. Should return a Promise.
+  - client: Botmatic integration token or your custom client (JSON object) returned by your custom auth function.
+  - data: JSON received from Botmatic.
 
 ```javascript
 const botmatic = require('@botmatic/js-integration')()
 
 // Tips: you can use regexp for action name.
-botmatic.onAction("actionName", function(data) {
+botmatic.onAction("actionName", ({client, data}) {
   return new Promise((resolve, reject) => {
     resolve({data: {key: "value"}, type: "data"});
   })
@@ -63,11 +84,17 @@ botmatic.onAction("actionName", function(data) {
 ```
 
 ### Listening to events
+
+**Parameters**:
+- event name: Regexp you can pass exact event name, or a regexp (e.g: ".\*")
+- callback: Function that takes 2 arguments. Should return a Promise.
+  - client: Botmatic integration token or your custom client (JSON object) returned by your custom auth function.
+  - data: JSON received from Botmatic.
+
 ```javascript
 const botmatic = require('@botmatic/js-integration')()
 
-// You can use regexp for event name, or the constants in botmatic.events
-botmatic.onEvent(botmatic.events.CONTACT_UPDATED, function(data) {
+botmatic.onEvent(botmatic.events.CONTACT_UPDATED, function({client, data}) {
   return new Promise((resolve, reject) => {
     resolve({data: "ok", type: "data"});
   })
