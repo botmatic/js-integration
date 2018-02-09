@@ -16,7 +16,7 @@ const authenticate = (token) => (authorization) => {
 }
 
 const execute = (botmatic, client, req, res, type) => {
-  debug(`Executing ${type}…`)
+  debug(`Executing ${type}...`)
 
   let elementFound = null;
   var regex;
