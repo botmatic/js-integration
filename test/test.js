@@ -100,14 +100,10 @@ describe('botmatic', function() {
       return new Promise((resolve, reject) => {
         getExpress()
         .then(({appServer, appExpressHandler, port}) => {
-          const userAuthenticated = {name: "my name"};
           const token = "mytoken";
 
           const botmaticWithAuth = require('../src/index')({
-            server: appServer,
-            auth: (token) => {
-              return Promise.resolve(userAuthenticated)
-            }
+            server: appServer
           });
 
           botmaticWithAuth.onEvent(".*", function({auth, data}) {
@@ -132,14 +128,7 @@ describe('botmatic', function() {
       })
     });
 
-
-
-
   })
-
-  // after(function() {
-  //   expressHandler.close();
-  // });
 });
 
 
