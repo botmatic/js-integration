@@ -1,21 +1,38 @@
 const request = require('request')
 const debug = require('debug')('botmatic:server')
 
-require('dotenv').config();
+// require('dotenv').config();
+
+/**
+ * @constant
+ * @type BotmaticEvents
+ */
+const BOTMATIC_EVENTS = Object.freeze({
+  INSTALL: "install",
+  UNINSTALL: "uninstall",
+  CONTACT_UPDATED: "contact_updated",
+  CONTACT_CREATED: "contact_created",
+  CONTACT_DELETED: "contact_deleted",
+  USER_REPLY: "user_reply",
+  BOT_REPLY: "bot_reply"
+})
 
 const bearer = (token) => `Bearer ${token}`.trim();
+const BOTMATIC_ENDPOINT = process.env.BOTMATIC_ENDPOINT || "https://app.botmatic.ai/api"
 
-const authenticate = (token) => (authorization) => {
+const authenticate = (token) => async (authorization) => {
   return new Promise((resolve, reject) => {
     if (token == '' || authorization == bearer(token)) {
-      resolve(token)
+      return({success: true, token: token})
     } else {
-      reject('Bad token')
+      return({success: false, error: "Bad token"})
     }
   })
 }
 
-const execute = (botmatic, client, req, res, type) => {
+const authenticate_accept_all = async () => {ok: true}
+
+const execute = (botmatic, auth, req, res, type) => {
   debug(`Executing ${type}...`)
 
   let elementFound = null;
@@ -30,7 +47,7 @@ const execute = (botmatic, client, req, res, type) => {
   }
 
   if (elementFound) {
-    elementFound({data: req.body, client})
+    elementFound({data: req.body, auth})
     .then((result) => {
       result.success = true;
       send_response(res, result)
@@ -52,8 +69,36 @@ const execute = (botmatic, client, req, res, type) => {
   }
 }
 
-const execute_event = (botmatic, auth_user, req, res) => {
-  execute(botmatic, auth_user, req, res, "event")
+const execute_event = async (botmatic, {token, client}, req, res) => {
+  execute(botmatic, {token, client}, req, res, "event")
+}
+
+const identifyToken = (token) => {
+  return new Promise((resolve, reject) => {
+    request.post({
+      url: BOTMATIC_ENDPOINT+"/api/validatetoken",
+      form: message,
+      type: 'JSON'
+    }, (err, httpResponse, body) => {
+      if (err) {
+        debug(`An error occured validatig token on Botmatic: ${err}`)
+        resolve(false)
+      } else if (body.success) {
+        resolve(true)
+      } else {
+        debug(`Botmatic reject token ${token}`)
+        resolve(false)
+      }
+    })
+  })
+}
+
+const getTokenInHeader = (headers) => {
+  if (headers && headers.authorization) {
+    return headers.authorization.replace('Bearer ', '')
+  } else {
+    return null;
+  }
 }
 
 const execute_action = (botmatic, auth_user, req, res) => {
@@ -63,6 +108,14 @@ const execute_action = (botmatic, auth_user, req, res) => {
 const send_response = (res, response) => {
   debug(`Send response: ${JSON.stringify(response)}`)
   res.send(response);
+}
+
+const get_auth = (token, client) => {
+  if ( client === true ) {
+    return {token:token}
+  } else {
+    return {token:token, client: client}
+  }
 }
 
 const setup_express = (port = 3000) => {
@@ -75,48 +128,67 @@ const setup_express = (port = 3000) => {
   return {app, handle}
 }
 
-const setup_routes = (botmatic, bearer, path = '/', token = '') => {
+const setup_routes = (botmatic, bearer, path = '/') => {
   debug(`setup route on "${path}"`)
 
   const bodyParser = require('body-parser');
   const jsonParser = bodyParser.json();
 
-  botmatic.app.post(path, jsonParser, (req, res) => {
-    botmatic.authenticate_request(req.headers.authorization)
-    .then((client) => {
-      if (req.body) {
-        if (req.body.action) {
-          execute_action(botmatic, client, req, res)
-        } else if (req.body.event) {
-          execute_event(botmatic, client, req, res)
-        } else {
-          debug("not receive an action or an event. Ignore")
-          res.status(403).send("Bad Request")
-        }
+  botmatic.app.post(path, jsonParser, async (req, res) => {
+    const tokenInHeader = getTokenInHeader(req.headers)
+
+    if (req.body && req.body.event && [botmatic.events.INSTALL, botmatic.events.UNINSTALL].indexOf(req.body.event) >= 0) {
+      if ( await identifyToken(tokenInHeader)) {
+        execute(botmatic, auth_user, req, res, "event")
       } else {
-        debug(`no parameter sent in query`)
-        res.status(400).send("Bad request. No parameter received")
+        res.status(401).send("Not authorized")
       }
-    })
-    .catch((error) => {
-      debug(`forbidden: bad auth`)
-      res.status(401).send("Not authorized")
-    })
+    } else {
+      botmatic.authenticate_request(req.headers.authorization)
+      .then((client) => {
+        if (req.body) {
+          if (req.body.action) {
+            execute_action(botmatic, get_auth(tokenInHeader, client), req, res)
+          } else if (req.body.event) {
+            execute_event(botmatic, get_auth(tokenInHeader, client), req, res)
+          } else {
+            debug("not receive an action or an event. Ignore")
+            res.status(403).send("Bad Request")
+          }
+        } else {
+          debug(`no parameter sent in query`)
+          res.status(400).send("Bad request. No parameter received")
+        }
+      })
+      .catch((error) => {
+        debug(`forbidden: bad auth`)
+        res.status(401).send("Not authorized")
+      })
+    }
   });
+}
+
+const get_auth_function = (auth = null) => {
+  if ( typeof auth !== "function" ) {
+    if ( typeof auth === "string" ) {
+      authenticate(auth)
+    } else {
+      auth = authenticate_accept_all
+    }
+  }
+
+  return auth
 }
 
 const init = ({path, server, token, port, auth}) => {
   let handle = undefined
+
   if (!server) {
     const res = setup_express(port)
     server = res.app
     handle = res.handle
   } else {
     debug("use existing express server")
-  }
-
-  if (!auth) {
-    auth = authenticate(token)
   }
 
   if (!bearer) {
@@ -129,7 +201,9 @@ const init = ({path, server, token, port, auth}) => {
     action: [],
     event: [],
     app: server,
-    authenticate_request: auth,
+    // token: token,
+    authenticate_request: get_auth_function(auth),
+    events: BOTMATIC_EVENTS,
     close: (fn) => {
       if (handle) {
         debug("close handle")

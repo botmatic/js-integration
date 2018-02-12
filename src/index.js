@@ -1,18 +1,6 @@
 const debug = require('debug')('botmatic')
 
 /**
- * @constant
- * @type BotmaticEvents
- */
-const BOTMATIC_EVENTS = Object.freeze({
-  CONTACT_UPDATED: "contact_updated",
-  CONTACT_CREATED: "contact_created",
-  CONTACT_DELETED: "contact_deleted",
-  USER_REPLY: "user_reply",
-  BOT_REPLY: "bot_reply"
-})
-
-/**
  * Returns an onActionFunction
  *
  * @param {Object} server
@@ -80,17 +68,15 @@ const makeOnUninstall = (server) => (func) => {
 const init = (params = {}) => {
   server = require('./server')(params)
 
-  botmatic = {
+  return {
     onAction: makeOnAction(server),
     onEvent: makeOnEvent(server),
     onInstall: makeOnInstall(server),
     onUninstall: makeOnUninstall(server),
     app: server.app,
-    events: BOTMATIC_EVENTS,
+    events: server.BOTMATIC_EVENTS,
     close: server.close
   }
-
-  return botmatic
 }
 
 module.exports = init
