@@ -18,7 +18,7 @@ const BOTMATIC_EVENTS = Object.freeze({
 })
 
 const bearer = (token) => `Bearer ${token}`.trim();
-const BOTMATIC_ENDPOINT = process.env.BOTMATIC_ENDPOINT || "https://app.botmatic.ai/api"
+const BOTMATIC_ENDPOINT = process.env.BOTMATIC_BASE_URL || "https://app.botmatic.ai"
 
 const authenticate = (token) => async (authorization) => {
   return new Promise((resolve, reject) => {
@@ -77,7 +77,7 @@ const identifyToken = (token) => {
   return new Promise((resolve, reject) => {
     request.post({
       url: BOTMATIC_ENDPOINT+"/api/validatetoken",
-      form: message,
+      json: { token: token },
       type: 'JSON'
     }, (err, httpResponse, body) => {
       if (err) {
@@ -139,7 +139,7 @@ const setup_routes = (botmatic, bearer, path = '/') => {
 
     if (req.body && req.body.event && [botmatic.events.INSTALL, botmatic.events.UNINSTALL].indexOf(req.body.event) >= 0) {
       if ( await identifyToken(tokenInHeader)) {
-        execute(botmatic, auth_user, req, res, "event")
+        execute(botmatic, { token: tokenInHeader }, req, res, "event")
       } else {
         res.status(401).send("Not authorized")
       }
