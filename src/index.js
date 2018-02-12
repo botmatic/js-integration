@@ -86,7 +86,8 @@ const init = (params = {}) => {
     onInstall: makeOnInstall(server),
     onUninstall: makeOnUninstall(server),
     app: server.app,
-    events: BOTMATIC_EVENTS
+    events: BOTMATIC_EVENTS,
+    close: server.close
   }
 
   return botmatic

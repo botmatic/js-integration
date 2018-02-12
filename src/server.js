@@ -70,9 +70,9 @@ const setup_express = (port = 3000) => {
 
   const app = require('express')()
 
-  app.listen(port, () => debug(`express app listening on port ${port}`))
+  const handle = app.listen(port, () => debug(`express app listening on port ${port}`))
 
-  return app
+  return {app, handle}
 }
 
 const setup_routes = (botmatic, bearer, path = '/', token = '') => {
@@ -106,8 +106,11 @@ const setup_routes = (botmatic, bearer, path = '/', token = '') => {
 }
 
 const init = ({path, server, token, port, auth}) => {
+  let handle = undefined
   if (!server) {
-    server = setup_express(port)
+    const res = setup_express(port)
+    server = res.app
+    handle = res.handle
   } else {
     debug("use existing express server")
   }
@@ -126,7 +129,14 @@ const init = ({path, server, token, port, auth}) => {
     action: [],
     event: [],
     app: server,
-    authenticate_request: auth
+    authenticate_request: auth,
+    close: (fn) => {
+      if (handle) {
+        debug("close handle")
+        debug(fn ? "has fn": "has not fn")
+        handle.close(fn)
+      }
+    }
   }
 
   setup_routes(botmatic, bearer, path)
