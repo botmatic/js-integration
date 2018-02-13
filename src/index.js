@@ -74,8 +74,12 @@ const init = (params = {}) => {
     onInstall: makeOnInstall(server),
     onUninstall: makeOnUninstall(server),
     app: server.app,
+
     events: server.events,
-    close: server.close
+    close: server.close,
+
+    onSettingsPage: server.onSettingsPage,
+    onUpdateSettings: server.onUpdateSettings
   }
 }
 
