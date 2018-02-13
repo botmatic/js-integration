@@ -147,33 +147,36 @@ const setup_routes = (botmatic, bearer, endpoint = '/', settings = null) => {
 
   botmatic.app.post(endpoint, jsonParser, async (req, res) => {
     const tokenInHeader = getTokenInHeader(req.headers)
-    botmatic.authenticate_request(req.headers.authorization)
-    .then(async (client) => {
-      if (req.body) {
-        if (req.body.action) {
-          execute_action(botmatic, get_auth(tokenInHeader, client), req, res)
-        } else if (req.body.event && [botmatic.events.INSTALL, botmatic.events.UNINSTALL].indexOf(req.body.event) >= 0) {
 
-          if ( await validateToken(tokenInHeader)) {
-            execute(botmatic, get_auth(tokenInHeader, client), req, res, "event")
-          } else {
-            res.status(401).send("Not authorized")
-          }
-        } else if (req.body.event) {
-          execute_event(botmatic, get_auth(tokenInHeader, client), req, res)
-        } else {
-          debug("not receive an action or an event. Ignore")
-          res.status(403).send("Bad Request")
-        }
+    if (req.body.event && [botmatic.events.INSTALL, botmatic.events.UNINSTALL].indexOf(req.body.event) >= 0) {
+      if ( await validateToken(tokenInHeader)) {
+        execute(botmatic, {token:tokenInHeader}, req, res, "event")
       } else {
-        debug(`no parameter sent in query`)
-        res.status(400).send("Bad request. No parameter received")
+        debug(`Botmatic reject token ${tokenInHeader} on install event`)
+        res.status(401).send("Not authorized.")
       }
-    })
-    .catch((error) => {
-      debug(`forbidden: bad auth: ${error}`)
-      res.status(401).send("Not authorized")
-    })
+    } else {
+      botmatic.authenticate_request(req.headers.authorization)
+      .then(async (client) => {
+        if (req.body) {
+          if (req.body.action) {
+            execute_action(botmatic, get_auth(tokenInHeader, client), req, res)
+          } else if (req.body.event) {
+            execute_event(botmatic, get_auth(tokenInHeader, client), req, res)
+          } else {
+            debug("not receive an action or an event. Ignore")
+            res.status(403).send("Bad Request")
+          }
+        } else {
+          debug(`no parameter sent in query`)
+          res.status(400).send("Bad request. No parameter received")
+        }
+      })
+      .catch((error) => {
+        debug(`forbidden: bad auth: ${error}`)
+        res.status(401).send("Not authorized")
+      })
+    }
   });
 }
 
