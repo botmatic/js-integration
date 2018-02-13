@@ -250,12 +250,6 @@ const init = ({endpoint, settings, server, token, port, auth}) => {
     debug("use existing express server")
   }
 
-  if (!bearer) {
-    bearer = basic_bearer
-  } else {
-    debug("use custom bearer function")
-  }
-
   const botmatic = {
     action: [],
     event: [],
