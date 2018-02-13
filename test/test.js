@@ -2,6 +2,9 @@ var assert = require('assert');
 var request = require('request');
 var chai = require('chai');
 var expect = chai.expect;
+require('dotenv').config();
+
+var nock = require('./nock');
 
 // const app = require('express')()
 // const port = 7845
@@ -21,6 +24,8 @@ const getExpress = () => {
 const getBotmatic = (params) => require('../src/index')(params)
 
 describe('botmatic', function() {
+  nock.setup.validatetoken();
+
   describe('#test-botmatic-params', function() {
 
     it('should return status code 200 when the token is not present', function(done) {
@@ -60,7 +65,7 @@ describe('botmatic', function() {
       });
     });
 
-    it('should return auth object with clientwhen event is received', function() {
+    it('should return auth object with client when event is received', function() {
       return new Promise((resolve, reject) => {
         getExpress()
         .then(({appServer, appExpressHandler, port}) => {
@@ -127,72 +132,81 @@ describe('botmatic', function() {
         });
       })
     });
-
-    it('should return auth with token when event is received', function() {
-      return new Promise((resolve, reject) => {
-        getExpress()
-        .then(({appServer, appExpressHandler, port}) => {
-          const botmaticWithAuth = require('../src/index')({
-            server: appServer,
-            endpoint: "/endpoint",
-            settings: {
-              url: 'lol',
-              view: "view.html"
-            }
-          });
-
-          appExpressHandler.close();
-          resolve('ok')
-        });
-      })
-    });
-
   })
 });
 
-// describe('#test-settings-page', function() {
-//   it('should return html form page', function() {
-//     return new Promise((resolve, reject) => {
-//       getExpress()
-//       .then(({appServer, appExpressHandler, port}) => {
-//         const botmaticWithAuth = require('../src/index')({
-//           server: appServer
-//         });
-//
-//         botmaticWithAuth.onNewSettings("/settingspage", function(uuid) {
-//           return Promise.resolve("super html")
-//         })
-//
-//         appExpressHandler.close();
-//         resolve('ok')
-//       });
-//     })
-//   });
-// })
-
-describe('#test-settings-page', function() {
-  it('should return html form pagee', function() {
+describe('#test-header-token-on-install-event', function() {
+  it('should received install event when event it is fired with good validated token', function() {
     return new Promise((resolve, reject) => {
       getExpress()
-      .then(async ({appServer, appExpressHandler, port}) => {
-        const botmatic = require('../src/index')({server: appServer});
-        console.log(port);
+      .then(({appServer, appExpressHandler, port}) => {
+        const token = "goodtoken";
 
-        botmatic.onNewSettings("/settingspath", (uuid, token) => {
-          return Promise.resolve('son html')
+        const botmaticWithAuth = require('../src/index')({
+          server: appServer
+        });
+
+        botmaticWithAuth.onEvent("install", function({auth, data}) {
+          appExpressHandler.close();
+
+          if (token == auth.token) {
+            resolve()
+          } else {
+            reject(new Error(`Token received different than sent: ${token} != ${auth.token}`))
+          }
+
+          return Promise.resolve({data: {key: "value"}, type: "data"});
         })
 
-        // var res = await botmatic.getNewSettingsPage("udgsdfgdfsguid", function(uuid) {
-        //   return Promise.resolve('YOUHOU')
-        // })
-        //
-        // console.log(res)
+        request.post({
+          url: "http://localhost:"+port,
+          type: 'JSON',
+          headers: {'Authorization': 'Bearer ' + token},
+          json: { event: "install", data: {"my event": {username: 'me', password: '123'}}},
+        })
 
-      })
+        setTimeout(function() {
+          appExpressHandler.close();
+          reject(new Error(`No event install received`))
+        }, 1000)
+      });
     })
-
-
   });
+
+
+  it('should not receive install event when event install is fired with bad integration token', function() {
+    return new Promise((resolve, reject) => {
+      getExpress()
+      .then(({appServer, appExpressHandler, port}) => {
+        const token = "badtoken";
+
+        const botmaticWithAuth = require('../src/index')({
+          server: appServer
+        });
+
+        botmaticWithAuth.onEvent("install", function({auth, data}) {
+          appExpressHandler.close();
+
+          reject(new Error(`Musn't received install event with bad token`))
+
+          return Promise.resolve({data: {key: "value"}, type: "data"});
+        })
+
+        request.post({
+          url: "http://localhost:"+port,
+          type: 'JSON',
+          headers: {'Authorization': 'Bearer ' + token},
+          json: { event: "install", data: {"my event": {username: 'me', password: '123'}}},
+        })
+
+        setTimeout(function() {
+          appExpressHandler.close();
+          resolve()
+        }, 1000)
+      });
+    })
+  });
+
 })
 
 

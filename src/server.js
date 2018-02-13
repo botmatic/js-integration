@@ -18,7 +18,7 @@ const BOTMATIC_EVENTS = Object.freeze({
 })
 
 const bearer = (token) => `Bearer ${token}`.trim();
-const BOTMATIC_ENDPOINT = process.env.BOTMATIC_ENDPOINT || "https://app.botmatic.ai/api"
+const BOTMATIC_BASE_URL = process.env.BOTMATIC_BASE_URL || "https://app.botmatic.ai/api"
 
 const authenticate = (token) => async (authorization) => {
   return new Promise((resolve, reject) => {
@@ -74,11 +74,11 @@ const execute_event = async (botmatic, {token, client}, req, res) => {
 }
 
 const validateToken = (token) => {
-  console.log('VALIDATE TOKEN ' + token);
+  debug('validate token: ' + token)
 
   return new Promise((resolve, reject) => {
     request.post({
-      url: BOTMATIC_ENDPOINT+"/api/integrationtokens/validate",
+      url: BOTMATIC_BASE_URL+"/api/integrationtokens/validate",
       form: {token: token},
       type: 'JSON',
       headers: {'content-type': 'application/json'}
@@ -86,7 +86,6 @@ const validateToken = (token) => {
       try {
         const result = JSON.parse(body)
 
-console.log(result)
         if (err) {
           debug(`An error occured validatig token on Botmatic: ${err}`)
           resolve(false)
@@ -136,57 +135,41 @@ const setup_express = (port = 3000) => {
   return {app, handle}
 }
 
-// const setup_settings = (botmatic, settings = null) => {
-//   if (settings && settings.url && settings.view) {
-//     debug('Settings page defined', settings)
-//
-//     botmatic.app.get(settings.url, (req, res) => {
-//       res.render(settings.view);
-//     })
-//   } else {
-//     debug('No settings page defined')
-//   }
-// }
-
 const setup_routes = (botmatic, bearer, endpoint = '/', settings = null) => {
   debug(`setup route on "${endpoint}"`)
 
   const bodyParser = require('body-parser');
   const jsonParser = bodyParser.json();
 
-  // setup_settings(botmatic, settings)
-
   botmatic.app.post(endpoint, jsonParser, async (req, res) => {
     const tokenInHeader = getTokenInHeader(req.headers)
+    botmatic.authenticate_request(req.headers.authorization)
+    .then(async (client) => {
+      if (req.body) {
+        if (req.body.action) {
+          execute_action(botmatic, get_auth(tokenInHeader, client), req, res)
+        } else if (req.body.event && [botmatic.events.INSTALL, botmatic.events.UNINSTALL].indexOf(req.body.event) >= 0) {
 
-    if (req.body && req.body.event && [botmatic.events.INSTALL, botmatic.events.UNINSTALL].indexOf(req.body.event) >= 0) {
-      if ( await validateToken(tokenInHeader)) {
-        execute(botmatic, auth_user, req, res, "event")
-      } else {
-        res.status(401).send("Not authorized")
-      }
-    } else {
-      botmatic.authenticate_request(req.headers.authorization)
-      .then((client) => {
-        if (req.body) {
-          if (req.body.action) {
-            execute_action(botmatic, get_auth(tokenInHeader, client), req, res)
-          } else if (req.body.event) {
-            execute_event(botmatic, get_auth(tokenInHeader, client), req, res)
+          if ( await validateToken(tokenInHeader)) {
+            execute(botmatic, get_auth(tokenInHeader, client), req, res, "event")
           } else {
-            debug("not receive an action or an event. Ignore")
-            res.status(403).send("Bad Request")
+            res.status(401).send("Not authorized")
           }
+        } else if (req.body.event) {
+          execute_event(botmatic, get_auth(tokenInHeader, client), req, res)
         } else {
-          debug(`no parameter sent in query`)
-          res.status(400).send("Bad request. No parameter received")
+          debug("not receive an action or an event. Ignore")
+          res.status(403).send("Bad Request")
         }
-      })
-      .catch((error) => {
-        debug(`forbidden: bad auth`)
-        res.status(401).send("Not authorized")
-      })
-    }
+      } else {
+        debug(`no parameter sent in query`)
+        res.status(400).send("Bad request. No parameter received")
+      }
+    })
+    .catch((error) => {
+      debug(`forbidden: bad auth: ${error}`)
+      res.status(401).send("Not authorized")
+    })
   });
 }
 
