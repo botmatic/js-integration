@@ -20,7 +20,7 @@ const BOTMATIC_EVENTS = Object.freeze({
 })
 
 const bearer = (token) => `Bearer ${token}`.trim();
-const BOTMATIC_BASE_URL = process.env.BOTMATIC_BASE_URL || "https://app.botmatic.ai/api"
+const BOTMATIC_BASE_URL = process.env.BOTMATIC_BASE_URL || "https://app.botmatic.ai"
 
 const authenticate = (token) => async (authorization) => {
   return new Promise((resolve, reject) => {
@@ -88,7 +88,7 @@ const validateToken = (token) => {
       }, (err, httpResponse, body) => {
         try {
           const result = JSON.parse(body)
-  
+
           if (err) {
             debug(`An error occured validatig token on Botmatic: ${err}`)
             resolve(false)
@@ -251,12 +251,6 @@ const init = ({endpoint, settings, server, token, port, auth}) => {
     handle = res.handle
   } else {
     debug("use existing express server")
-  }
-
-  if (!bearer) {
-    bearer = basic_bearer
-  } else {
-    debug("use custom bearer function")
   }
 
   const botmatic = {
