@@ -73,20 +73,31 @@ const execute_event = async (botmatic, {token, client}, req, res) => {
   execute(botmatic, {token, client}, req, res, "event")
 }
 
-const identifyToken = (token) => {
+const validateToken = (token) => {
+  console.log('VALIDATE TOKEN ' + token);
+
   return new Promise((resolve, reject) => {
     request.post({
-      url: BOTMATIC_ENDPOINT+"/api/validatetoken",
-      form: message,
-      type: 'JSON'
+      url: BOTMATIC_ENDPOINT+"/api/integrationtokens/validate",
+      form: {token: token},
+      type: 'JSON',
+      headers: {'content-type': 'application/json'}
     }, (err, httpResponse, body) => {
-      if (err) {
-        debug(`An error occured validatig token on Botmatic: ${err}`)
-        resolve(false)
-      } else if (body.success) {
-        resolve(true)
-      } else {
-        debug(`Botmatic reject token ${token}`)
+      try {
+        const result = JSON.parse(body)
+
+console.log(result)
+        if (err) {
+          debug(`An error occured validatig token on Botmatic: ${err}`)
+          resolve(false)
+        } else if (result && result.success) {
+          resolve(true)
+        } else {
+          debug(`Botmatic reject token ${token}`)
+          resolve(false)
+        }
+      } catch(e) {
+        debug(`An error occured validatig token on Botmatic: ${e}`)
         resolve(false)
       }
     })
@@ -120,25 +131,36 @@ const get_auth = (token, client) => {
 
 const setup_express = (port = 3000) => {
   debug(`starting express server on port ${port}`)
-
   const app = require('express')()
-
   const handle = app.listen(port, () => debug(`express app listening on port ${port}`))
-
   return {app, handle}
 }
 
-const setup_routes = (botmatic, bearer, path = '/') => {
-  debug(`setup route on "${path}"`)
+// const setup_settings = (botmatic, settings = null) => {
+//   if (settings && settings.url && settings.view) {
+//     debug('Settings page defined', settings)
+//
+//     botmatic.app.get(settings.url, (req, res) => {
+//       res.render(settings.view);
+//     })
+//   } else {
+//     debug('No settings page defined')
+//   }
+// }
+
+const setup_routes = (botmatic, bearer, endpoint = '/', settings = null) => {
+  debug(`setup route on "${endpoint}"`)
 
   const bodyParser = require('body-parser');
   const jsonParser = bodyParser.json();
 
-  botmatic.app.post(path, jsonParser, async (req, res) => {
+  // setup_settings(botmatic, settings)
+
+  botmatic.app.post(endpoint, jsonParser, async (req, res) => {
     const tokenInHeader = getTokenInHeader(req.headers)
 
     if (req.body && req.body.event && [botmatic.events.INSTALL, botmatic.events.UNINSTALL].indexOf(req.body.event) >= 0) {
-      if ( await identifyToken(tokenInHeader)) {
+      if ( await validateToken(tokenInHeader)) {
         execute(botmatic, auth_user, req, res, "event")
       } else {
         res.status(401).send("Not authorized")
@@ -180,7 +202,55 @@ const get_auth_function = (auth = null) => {
   return auth
 }
 
-const init = ({path, server, token, port, auth}) => {
+const onSettingsPage = (server) => async (path, func) => {
+  debug('onSettingsPage on ' + path)
+
+  server.get(path, async (req,res) => {
+    res.set('Content-Type', 'text/html')
+
+    var isTokenValid = await validateToken(req.query.token)
+
+    if (isTokenValid) {
+      res.send(await getSettingsPage(req.query.token, func))
+    } else {
+      res.status(401).send('Forbidden')
+    }
+  })
+}
+
+const onUpdateSettings = (server) => async (path, func) => {
+  debug('onUpdateSettings on ' + path)
+
+  server.post(path, async (req,res) => {
+    res.set('Content-Type', 'text/html')
+    var isTokenValid = await validateToken(req.query.token)
+
+    if (isTokenValid) {
+      var result = await func(req.query.token, req.body)
+
+      if ( result && result.success ) {
+        res.send('ok')
+      } else {
+        res.send('ko')
+      }
+    } else {
+      res.status(401).send('Forbidden')
+    }
+  })
+}
+
+const getSettingsPage = async (token, func) => {
+  var tpl = await func(token)
+
+  var fs = require('fs');
+  var resBuf = fs.readFileSync(__dirname + '/../views/integration-form.html');
+  var resStr = resBuf.toString('utf8')
+
+  var Mustache = require('mustache')
+  return Mustache.render(resStr, {tpl: tpl});
+}
+
+const init = ({endpoint, settings, server, token, port, auth}) => {
   let handle = undefined
 
   if (!server) {
@@ -210,10 +280,12 @@ const init = ({path, server, token, port, auth}) => {
         debug(fn ? "has fn": "has not fn")
         handle.close(fn)
       }
-    }
+    },
+    onSettingsPage: onSettingsPage(server),
+    onUpdateSettings: onUpdateSettings(server)
   }
 
-  setup_routes(botmatic, bearer, path)
+  setup_routes(botmatic, bearer, endpoint, settings)
 
   return botmatic
 }

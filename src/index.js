@@ -75,7 +75,10 @@ const init = (params = {}) => {
     onUninstall: makeOnUninstall(server),
     app: server.app,
     events: server.BOTMATIC_EVENTS,
-    close: server.close
+    close: server.close,
+
+    onSettingsPage: server.onSettingsPage,
+    onUpdateSettings: server.onUpdateSettings
   }
 }
 

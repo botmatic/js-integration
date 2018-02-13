@@ -21,7 +21,7 @@ const getExpress = () => {
 const getBotmatic = (params) => require('../src/index')(params)
 
 describe('botmatic', function() {
-  describe('#test-all_requests_accepted', function() {
+  describe('#test-botmatic-params', function() {
 
     it('should return status code 200 when the token is not present', function(done) {
       getExpress()
@@ -128,8 +128,72 @@ describe('botmatic', function() {
       })
     });
 
+    it('should return auth with token when event is received', function() {
+      return new Promise((resolve, reject) => {
+        getExpress()
+        .then(({appServer, appExpressHandler, port}) => {
+          const botmaticWithAuth = require('../src/index')({
+            server: appServer,
+            endpoint: "/endpoint",
+            settings: {
+              url: 'lol',
+              view: "view.html"
+            }
+          });
+
+          appExpressHandler.close();
+          resolve('ok')
+        });
+      })
+    });
+
   })
 });
+
+// describe('#test-settings-page', function() {
+//   it('should return html form page', function() {
+//     return new Promise((resolve, reject) => {
+//       getExpress()
+//       .then(({appServer, appExpressHandler, port}) => {
+//         const botmaticWithAuth = require('../src/index')({
+//           server: appServer
+//         });
+//
+//         botmaticWithAuth.onNewSettings("/settingspage", function(uuid) {
+//           return Promise.resolve("super html")
+//         })
+//
+//         appExpressHandler.close();
+//         resolve('ok')
+//       });
+//     })
+//   });
+// })
+
+describe('#test-settings-page', function() {
+  it('should return html form pagee', function() {
+    return new Promise((resolve, reject) => {
+      getExpress()
+      .then(async ({appServer, appExpressHandler, port}) => {
+        const botmatic = require('../src/index')({server: appServer});
+        console.log(port);
+
+        botmatic.onNewSettings("/settingspath", (uuid, token) => {
+          return Promise.resolve('son html')
+        })
+
+        // var res = await botmatic.getNewSettingsPage("udgsdfgdfsguid", function(uuid) {
+        //   return Promise.resolve('YOUHOU')
+        // })
+        //
+        // console.log(res)
+
+      })
+    })
+
+
+  });
+})
 
 
 Object.compare = function (obj1, obj2) {
