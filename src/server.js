@@ -1,5 +1,7 @@
 const request = require('request')
 const debug = require('debug')('botmatic:server')
+const bodyParser = require('body-parser');
+const jsonParser = bodyParser.json();
 
 // require('dotenv').config();
 
@@ -77,29 +79,34 @@ const validateToken = (token) => {
   debug('validate token: ' + token)
 
   return new Promise((resolve, reject) => {
-    request.post({
-      url: BOTMATIC_BASE_URL+"/api/integrationtokens/validate",
-      form: {token: token},
-      type: 'JSON',
-      headers: {'content-type': 'application/json'}
-    }, (err, httpResponse, body) => {
-      try {
-        const result = JSON.parse(body)
-
-        if (err) {
-          debug(`An error occured validatig token on Botmatic: ${err}`)
-          resolve(false)
-        } else if (result && result.success) {
-          resolve(true)
-        } else {
-          debug(`Botmatic reject token ${token}`)
+    if ( token ) {
+      request.post({
+        url: BOTMATIC_BASE_URL+"/api/integrationtokens/validate",
+        form: {token: token},
+        type: 'JSON',
+        headers: {'content-type': 'application/json'}
+      }, (err, httpResponse, body) => {
+        try {
+          const result = JSON.parse(body)
+  
+          if (err) {
+            debug(`An error occured validatig token on Botmatic: ${err}`)
+            resolve(false)
+          } else if (result && result.success) {
+            resolve(true)
+          } else {
+            debug(`Botmatic reject token ${token}`)
+            resolve(false)
+          }
+        } catch(e) {
+          debug(`An error occured validatig token on Botmatic: ${e}`)
           resolve(false)
         }
-      } catch(e) {
-        debug(`An error occured validatig token on Botmatic: ${e}`)
-        resolve(false)
-      }
-    })
+      })
+    } else {
+      debug(`No token given to validate`)
+      resolve(false)
+    }
   })
 }
 
@@ -137,9 +144,6 @@ const setup_express = (port = 3000) => {
 
 const setup_routes = (botmatic, bearer, endpoint = '/', settings = null) => {
   debug(`setup route on "${endpoint}"`)
-
-  const bodyParser = require('body-parser');
-  const jsonParser = bodyParser.json();
 
   botmatic.app.post(endpoint, jsonParser, async (req, res) => {
     const tokenInHeader = getTokenInHeader(req.headers)
@@ -204,9 +208,11 @@ const onSettingsPage = (server) => async (path, func) => {
 const onUpdateSettings = (server) => async (path, func) => {
   debug('onUpdateSettings on ' + path)
 
-  server.post(path, async (req,res) => {
+  server.post(path, bodyParser.urlencoded({ extended: true }), async (req,res) => {
     res.set('Content-Type', 'text/html')
-    var isTokenValid = await validateToken(req.query.token)
+
+    var token = req.body ? req.body.token : null;
+    var isTokenValid = await validateToken(token)
 
     if (isTokenValid) {
       var result = await func(req.query.token, req.body)
@@ -230,7 +236,7 @@ const getSettingsPage = async (token, func) => {
   var resStr = resBuf.toString('utf8')
 
   var Mustache = require('mustache')
-  return Mustache.render(resStr, {tpl: tpl});
+  return Mustache.render(resStr, {tpl: tpl, token: token});
 }
 
 const init = ({endpoint, settings, server, token, port, auth}) => {
