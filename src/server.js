@@ -182,13 +182,9 @@ const setup_routes = (botmatic, bearer, endpoint = '/') => {
 
 const get_auth_function = (auth = null) => {
   if ( typeof auth !== "function" ) {
-    console.log("get_auth_function not function");
-
     if ( typeof auth === "string" ) {
-      console.log("string");
       authenticate(auth)
     } else {
-      console.log("get_auth_function accept all");
       auth = authenticate_accept_all
     }
   }
@@ -224,16 +220,7 @@ const onUpdateSettings = (server) => async (path, func) => {
     if (isTokenValid) {
       var result = await func(req.query.token, req.body)
 
-      console.log('result')
-      console.log(result)
-
-
       res.send(result)
-      // if ( result && result.success ) {
-      //   res.send('ok')
-      // } else {
-      //   res.send('ko')
-      // }
     } else {
       res.status(401).send('Forbidden')
     }
