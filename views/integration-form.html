@@ -2,10 +2,62 @@
   <head>
   </head>
   <body>
-    <form method="post">
+    <form method="post" id="integration-form">
       {{{tpl}}}
       <input type="hidden" value="{{{token}}}" name="token" />
       <input type="submit" value="Save" />
     </form>
+
+    <script>
+      document.getElementById('integration-form').addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        var formData = new FormData(e.target);
+        var action = e.target.getAttribute('action') || "";
+
+        var object = {};
+        formData.forEach(function(value, key){
+            object[key] = value;
+        });
+        var json = JSON.stringify(object);
+
+        fetch(action, {
+          method: "POST",
+          body: json,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(function(response) {
+          response.json()
+          .then((e) => {
+            if ( e.success ) {
+              sendSavedToParent()
+            } else if (!e.success) {
+              showError(e.error)
+            } else {
+              showError("An error occured")
+            }
+          })
+          .catch((e) => {
+            console.log(e)
+          })
+        })
+        .catch(function(error) {
+          console.log('Il y a eu un problème avec l\'opération fetch: ' + error.message);
+        });
+
+        return false;
+      })
+
+      const showError = (error) => {
+        alert('ERROR: ' + error)
+      }
+
+      const sendSavedToParent = () => {
+        window.parent.postMessage({'iframe_saved': true}, "*");
+      }
+    </script>
   </body>
 </html>

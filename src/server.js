@@ -142,7 +142,7 @@ const setup_express = (port = 3000) => {
   return {app, handle}
 }
 
-const setup_routes = (botmatic, bearer, endpoint = '/', settings = null) => {
+const setup_routes = (botmatic, bearer, endpoint = '/') => {
   debug(`setup route on "${endpoint}"`)
 
   botmatic.app.post(endpoint, jsonParser, async (req, res) => {
@@ -182,9 +182,13 @@ const setup_routes = (botmatic, bearer, endpoint = '/', settings = null) => {
 
 const get_auth_function = (auth = null) => {
   if ( typeof auth !== "function" ) {
+    console.log("get_auth_function not function");
+
     if ( typeof auth === "string" ) {
+      console.log("string");
       authenticate(auth)
     } else {
+      console.log("get_auth_function accept all");
       auth = authenticate_accept_all
     }
   }
@@ -211,7 +215,7 @@ const onSettingsPage = (server) => async (path, func) => {
 const onUpdateSettings = (server) => async (path, func) => {
   debug('onUpdateSettings on ' + path)
 
-  server.post(path, bodyParser.urlencoded({ extended: true }), async (req,res) => {
+  server.post(path, jsonParser, async (req,res) => {
     res.set('Content-Type', 'text/html')
 
     var token = req.body ? req.body.token : null;
@@ -220,11 +224,16 @@ const onUpdateSettings = (server) => async (path, func) => {
     if (isTokenValid) {
       var result = await func(req.query.token, req.body)
 
-      if ( result && result.success ) {
-        res.send('ok')
-      } else {
-        res.send('ko')
-      }
+      console.log('result')
+      console.log(result)
+
+
+      res.send(result)
+      // if ( result && result.success ) {
+      //   res.send('ok')
+      // } else {
+      //   res.send('ko')
+      // }
     } else {
       res.status(401).send('Forbidden')
     }
@@ -242,7 +251,7 @@ const getSettingsPage = async (token, func) => {
   return Mustache.render(resStr, {tpl: tpl, token: token});
 }
 
-const init = ({endpoint, settings, server, token, port, auth}) => {
+const init = ({endpoint, server, token, port, auth}) => {
   let handle = undefined
 
   if (!server) {
@@ -271,7 +280,7 @@ const init = ({endpoint, settings, server, token, port, auth}) => {
     onUpdateSettings: onUpdateSettings(server)
   }
 
-  setup_routes(botmatic, bearer, endpoint, settings)
+  setup_routes(botmatic, bearer, endpoint)
 
   return botmatic
 }
