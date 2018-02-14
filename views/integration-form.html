@@ -1,62 +1,78 @@
-<html>
+<html style="overflow: hidden;">
   <head>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
   </head>
-  <body>
+  <body onload="resize()">
+    <div class="inner-content">
     <form method="post" id="integration-form">
       {{{tpl}}}
       <input type="hidden" value="{{{token}}}" name="token" />
-      <input type="submit" value="Save" />
     </form>
-
+  </div>
     <script>
-      document.getElementById('integration-form').addEventListener("submit", (e) => {
-        e.preventDefault();
+      var form = document.getElementById('integration-form');
 
-        var formData = new FormData(e.target);
-        var action = e.target.getAttribute('action') || "";
-
-        var object = {};
-        formData.forEach(function(value, key){
-            object[key] = value;
+      (function () {
+        form.addEventListener("submit", (e) => {
+          e.preventDefault();
+          return false
         });
-        var json = JSON.stringify(object);
 
-        fetch(action, {
-          method: "POST",
-          body: json,
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
+        window.addEventListener('message', function(event) {
+          if (event.data.post_form) {
+            var formData = new FormData(form);
+            var action = form.getAttribute('action') || "";
+
+            var object = {};
+            formData.forEach(function(value, key){
+                object[key] = value;
+            });
+            var json = JSON.stringify(object);
+
+            fetch(action, {
+              method: "POST",
+              body: json,
+              headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              }
+            })
+            .then(function(response) {
+              response.json()
+              .then((e) => {
+                if ( e.success ) {
+                  sendSavedToParent()
+                } else if (!e.success) {
+                  showError(e.error)
+                } else {
+                  showError("An error occured")
+                }
+              })
+              .catch((e) => {
+                showError(e)
+              })
+            })
+            .catch(function(error) {
+              showError(e)
+            });
+
+            return false;
           }
         })
-        .then(function(response) {
-          response.json()
-          .then((e) => {
-            if ( e.success ) {
-              sendSavedToParent()
-            } else if (!e.success) {
-              showError(e.error)
-            } else {
-              showError("An error occured")
-            }
-          })
-          .catch((e) => {
-            console.log(e)
-          })
-        })
-        .catch(function(error) {
-          console.log('Il y a eu un problème avec l\'opération fetch: ' + error.message);
-        });
 
-        return false;
-      })
+        const showError = (error) => {
+          window.parent.postMessage({'iframe_saved': {success: false}}, "*");
+        }
 
-      const showError = (error) => {
-        alert('ERROR: ' + error)
-      }
+        const sendSavedToParent = () => {
+          window.parent.postMessage({'iframe_saved': {success: true}}, "*");
+        }
+      })()
 
-      const sendSavedToParent = () => {
-        window.parent.postMessage({'iframe_saved': true}, "*");
+      const resize = () => {
+        setTimeout(function() {
+          window.parent.postMessage({'iframe_loaded': {height: form.clientHeight}}, "*");
+        }, 100)
       }
     </script>
   </body>
