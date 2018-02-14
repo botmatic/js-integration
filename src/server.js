@@ -2,6 +2,8 @@ const request = require('request')
 const debug = require('debug')('botmatic:server')
 const bodyParser = require('body-parser');
 const jsonParser = bodyParser.json();
+const Mustache = require('mustache')
+const fs = require('fs')
 
 // require('dotenv').config();
 
@@ -229,12 +231,8 @@ const onUpdateSettings = (server) => async (path, func) => {
 
 const getSettingsPage = async (token, func) => {
   var tpl = await func(token)
-
-  var fs = require('fs');
   var resBuf = fs.readFileSync(__dirname + '/../views/integration-form.html');
   var resStr = resBuf.toString('utf8')
-
-  var Mustache = require('mustache')
   return Mustache.render(resStr, {tpl: tpl, token: token});
 }
 
