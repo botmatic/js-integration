@@ -24,7 +24,6 @@ settings is an optional JSON object with the following fields:
 | port        | Integer |optional - Server Express port (3000 by default) |
 | path        | String | optional - Endpoint path where Botmatic will send data with a POST request ("/" by default) |
 | server      | Express server|optional - Your existing Express server |
-| token      | String | optional - Botmatic integration token. If not set, the integration will accept all requests. |
 | auth        | Function | optionnal - Function to authenticate Botmatic integration client. Take a parameter token (given in header), must return a promise |
 
 This library has an Express server embedded. It's optional and you can use your own if you want.
@@ -52,7 +51,7 @@ const botmatic = require('@botmatic/js-integration')({
       // Retrieve the client in your database, or other.
       const client_authenticated = {id: "client_id"}
       // If the client is known
-      // resolve(client_authenticated)
+      resolve(client_authenticated)
       // if not
       // reject();
     })
@@ -73,8 +72,6 @@ Useful to fetch data from an external source.
   - data: JSON received from Botmatic.
 
 ```javascript
-const botmatic = require('@botmatic/js-integration')()
-
 // Tips: you can use regexp for action name.
 botmatic.onAction("actionName", ({client, data}) {
   return new Promise((resolve, reject) => {
@@ -92,8 +89,6 @@ botmatic.onAction("actionName", ({client, data}) {
   - data: JSON received from Botmatic.
 
 ```javascript
-const botmatic = require('@botmatic/js-integration')()
-
 botmatic.onEvent(botmatic.events.CONTACT_UPDATED, function({client, data}) {
   return new Promise((resolve, reject) => {
     resolve({data: "ok", type: "data"});
@@ -111,7 +106,71 @@ Events list:
 | USER_REPLY | A user has just spoke on Botmatic |
 | BOT_REPLY | A bot has just replied to a user on Botmatic|
 
-### Debug
+
+## Settings page
+
+You can define a settings page, that will be displayed on Botmatic integration form.
+It used to save your own specific fields to a specific integration token.
+Usefull when your integration is used by many clients, to differentiate calls by integration token.
+
+### Define your settings route
+
+Please define the route to access to your form.
+You have the token in parameter, to retrieve some data for modification.
+
+The example uses Mustache for templating.
+It helps to put data in the HTML template.
+
+```javascript
+botmatic.onSettingsPage("/settingspath", async (token) => {
+  // Move in global to do it once.
+  // Just here for testing
+  const Mustache = require('mustache')
+  const fs = require('fs')
+  const resBuf = fs.readFileSync(__dirname + '/views/fields.html');
+  const resStr = resBuf.toString('utf8')
+
+  var tpl = Mustache.render(resStr, {name: "My name", value: "My value"});
+  return Promise.resolve(tpl)
+})
+```
+
+### Define your form views/fields.html
+
+Please return this HTML structure to be friendly with Botmatic design.
+
+```html
+<div class="field is-horizontal">
+    <div class="field-label is-normal">
+        <label class="label">My iframe field</label>
+    </div>
+    <div class="field-body">
+        <div class="field">
+            <div class="control">
+                <input name="{{name}}" placeholder="my placeholder" class="input" value="{{value}}">
+            </div>
+            <p class="help">My help.</p>
+        </div>
+    </div>
+</div>
+...
+```
+
+### Define your form validation
+
+After create the route and template, you can catch the form validation to save data where you want.
+Botmatic form submit will interrupted if you return success to false, because of some many required missing fields.
+
+```javascript
+botmatic.onUpdateSettings('/settingspath', function(token, data) {
+  // Validate data
+  // Store them
+  // Resolve sucess to true or false
+  return Promise.resolve({success: true})
+})
+
+
+## Debug
 
 Enable debug traces by starting your application with:
 ```bash
