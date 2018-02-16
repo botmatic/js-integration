@@ -103,7 +103,7 @@ const validateToken = (token) => {
             resolve(false)
           }
         } catch(e) {
-          debug(`An error occured validatig token on Botmatic: ${e}`)
+          debug(`Unexpected error occured validatig token on Botmatic: ${e}`)
           resolve(false)
         }
       })
