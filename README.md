@@ -156,10 +156,11 @@ Please return this HTML structure to be friendly with Botmatic design.
 ...
 ```
 
-### Define your form validation
+### Define your success form validation
 
 After create the route and template, you can catch the form validation to save data where you want.
 Botmatic form submit will interrupted if you return success to false, because of some many required missing fields.
+
 
 ```javascript
 botmatic.onUpdateSettings('/settingspath', function(token, data) {
@@ -168,7 +169,22 @@ botmatic.onUpdateSettings('/settingspath', function(token, data) {
   // Resolve sucess to true or false
   return Promise.resolve({success: true})
 })
+```
 
+### Define your form validation with error
+If you have an error, you can resolve with success to false, and errorFields that contains name of input, withj the error to display.
+
+
+```javascript
+botmatic.onUpdateSettings('/settingspath', function(token, data) {
+  resolve({
+    success: false,
+    errorFields: {
+      api_key: "Field required"
+    }
+  })
+})
+```
 
 ## Debug
 

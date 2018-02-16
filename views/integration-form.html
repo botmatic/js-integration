@@ -73,20 +73,12 @@
             var input;
 
             for ( var key in error.errorFields ) {
-              
-              console.log('remove class')
               input = form.querySelector(`[name="${key}"]`)
               input.classList.add('is-danger')
-
-console.log('add p danger')
 
               var p = document.createElement('p')
               p.setAttribute("class", "help is-danger error")
               p.innerHTML = error.errorFields[key]
-
-
-
-              console.log('error.errorFields[key] : ' + error.errorFields[key])
 
               input.parentNode.insertBefore(p, input.nextSibling);
             }
