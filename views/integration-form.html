@@ -20,6 +20,8 @@
 
         window.addEventListener('message', function(event) {
           if (event.data.post_form) {
+            console.log('POST FORM REQUESTED')
+            removeErrorFields()
             var formData = new FormData(form);
             var action = form.getAttribute('action') || "";
 
@@ -43,12 +45,16 @@
                 if ( e.success ) {
                   sendSavedToParent()
                 } else if (!e.success) {
-                  showError(e.error)
+                  showError(e)
                 } else {
                   showError("An error occured")
                 }
+
+                window.parent.postMessage({'iframe_loaded': {height: form.clientHeight}}, "*");
               })
               .catch((e) => {
+
+                console.log('HERE ??')
                 showError(e)
               })
             })
@@ -62,6 +68,43 @@
 
         const showError = (error) => {
           window.parent.postMessage({'iframe_saved': {success: false}}, "*");
+
+          if (error.errorFields) {
+            var input;
+
+            for ( var key in error.errorFields ) {
+              
+              console.log('remove class')
+              input = form.querySelector(`[name="${key}"]`)
+              input.classList.add('is-danger')
+
+console.log('add p danger')
+
+              var p = document.createElement('p')
+              p.setAttribute("class", "help is-danger error")
+              p.innerHTML = error.errorFields[key]
+
+
+
+              console.log('error.errorFields[key] : ' + error.errorFields[key])
+
+              input.parentNode.insertBefore(p, input.nextSibling);
+            }
+          }
+        }
+
+        const removeErrorFields = () => {
+          var errors = document.querySelectorAll('p.is-danger');
+
+          for (var i = 0 ; i < errors.length ; i++) {
+            errors[i].remove()
+          }
+
+          var fields = form.querySelectorAll('input, textarea, checkbox, select')
+
+          for (var i = 0 ; i < fields.length ; i++) {
+            fields[i].classList.remove('is-danger')
+          }
         }
 
         const sendSavedToParent = () => {

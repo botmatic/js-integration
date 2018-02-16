@@ -82,6 +82,8 @@ const validateToken = (token) => {
 
   return new Promise((resolve, reject) => {
     if ( token ) {
+      debug(`validate to URL: ${BOTMATIC_BASE_URL}/api/integrationtokens/validate`)
+
       request.post({
         url: BOTMATIC_BASE_URL+"/api/integrationtokens/validate",
         form: {token: token},
@@ -158,7 +160,7 @@ const setup_routes = (botmatic, bearer, endpoint = '/') => {
         res.status(401).send("Not authorized.")
       }
     } else {
-      botmatic.authenticate_request(req.headers.authorization)
+      botmatic.authenticate_request(tokenInHeader)
       .then(async (client) => {
         if (req.body) {
           if (req.body.action) {
@@ -214,16 +216,19 @@ const onUpdateSettings = (server) => async (path, func) => {
   debug('onUpdateSettings on ' + path)
 
   server.post(path, jsonParser, async (req,res) => {
+    debug('receive settings to update')
     res.set('Content-Type', 'text/html')
 
     var token = req.body ? req.body.token : null;
     var isTokenValid = await validateToken(token)
 
     if (isTokenValid) {
+      debug('token is good')
       var result = await func(req.query.token, req.body)
 
       res.send(result)
     } else {
+      debug('bad token')
       res.status(401).send('Forbidden')
     }
   })
