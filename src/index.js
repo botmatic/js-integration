@@ -1,4 +1,5 @@
 const debug = require('debug')('botmatic')
+const request = require('request')
 
 /**
  * Returns an onActionFunction
