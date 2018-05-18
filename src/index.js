@@ -60,8 +60,10 @@ const sendEventOnCampaign = (event_name, data, token) => new Promise (resolve =>
     event_name, contacts: data
   }
 
+  const BOTMATIC_BASE_URL = process.env.BOTMATIC_BASE_URL || "https://app.botmatic.ai"
+
   request.post({
-    url: 'https://app.botmatic.ai/api/campaigns/execute-event',
+    url: BOTMATIC_BASE_URL,
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
