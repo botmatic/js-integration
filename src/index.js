@@ -54,6 +54,34 @@ const makeOnUninstall = (server) => (func) => {
   debug(`listening "uninstall" event`)
 }
 
+const sendEventOnCampaign = (event_name, data, token) => new Promise (resolve => {
+  const event = {
+    event_name, contacts: data
+  }
+
+  request.post({
+    url: 'https://app.botmatic.ai/api/campaigns/execute-event',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': json
+    },
+    json: event
+  },
+    (err, response) => {
+    if (err) {
+      resolve({success: false, error: err})
+    }
+    else {
+      if (response.statusCode === 200) {
+        resolve({success: true})
+      }
+      else {
+        resolve({success: false, error: {code: response.statusCode, body: response.body}})
+      }
+    }
+    })
+})
+
 /**
  * Initialises the Botmatic module
  * @param {Object} [params]       Parameters for setting up the express instance
@@ -79,7 +107,9 @@ const init = (params = {}) => {
     close: server.close,
 
     onSettingsPage: server.onSettingsPage,
-    onUpdateSettings: server.onUpdateSettings
+    onUpdateSettings: server.onUpdateSettings,
+
+    sendEventOnCampaign
   }
 }
 

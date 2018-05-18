@@ -57,7 +57,7 @@ const execute = (botmatic, auth, req, res, type) => {
       send_response(res, result)
     })
     .catch((error) => {
-      error.success= false;
+      error.success = false;
       send_response(res, error)
     })
   } else {
