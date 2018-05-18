@@ -64,7 +64,7 @@ const sendEventOnCampaign = (event_name, data, token) => new Promise (resolve =>
     url: 'https://app.botmatic.ai/api/campaigns/execute-event',
     headers: {
       'Authorization': `Bearer ${token}`,
-      'Content-Type': json
+      'Content-Type': 'application/json'
     },
     json: event
   },
