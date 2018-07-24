@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "chai": "^4.1.2",
-    "chai-http": "git+ssh://git@github.com/chaijs/chai-http.git",
+    "chai-http": "https://git@github.com/chaijs/chai-http.git",
     "debug": "^3.1.0",
     "dotenv": "^4.0.0",
     "express": "^4.16.2",
