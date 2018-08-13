@@ -186,6 +186,24 @@ botmatic.onUpdateSettings('/settingspath', function(token, data) {
 })
 ```
 
+### Add file inputs
+To parse file input, you have to add the parser multer, as:
+
+```javascript
+let multer = require('multer');
+let upload = multer();
+app.use(upload.any());
+```
+
+After that, you will be able to parse the files:
+
+```javascript
+botmatic.onUpdateSettings('/settingspath', function(token, data) {
+  console.log(data.files)
+  ...
+})
+```
+
 ## Debug
 
 Enable debug traces by starting your application with:
