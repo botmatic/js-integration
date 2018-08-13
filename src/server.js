@@ -224,7 +224,7 @@ const onUpdateSettings = (server) => async (path, func) => {
 
     if (isTokenValid) {
       debug('token is good')
-      var result = await func(req.query.token, req.body)
+      var result = await func(req.query.token, {...req.body, files: req.files })
 
       res.send(result)
     } else {
