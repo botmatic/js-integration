@@ -12,7 +12,7 @@
     <script>
       var form = document.getElementById('integration-form');
 
-      (function () {
+      // (function () {
         form.addEventListener("submit", (e) => {
           e.preventDefault();
           return false
@@ -20,7 +20,6 @@
 
         window.addEventListener('message', function(event) {
           if (event.data.post_form) {
-            console.log('POST FORM REQUESTED')
             removeErrorFields()
             var formData = new FormData(form);
             var action = form.getAttribute('action') || "";
@@ -60,8 +59,6 @@
                 window.parent.postMessage({'iframe_loaded': {height: form.clientHeight}}, "*");
               })
               .catch((e) => {
-
-                console.log('HERE ??')
                 showError(e)
               })
             })
@@ -109,7 +106,7 @@
         const sendSavedToParent = () => {
           window.parent.postMessage({'iframe_saved': {success: true}}, "*");
         }
-      })()
+      // })()
 
       const resize = () => {
         setTimeout(function() {
